@@ -1,0 +1,89 @@
+.TH SMD 1 smd\-VERSION
+.SH NAME
+smd \- a small markdown (and barely\-html) viewer
+.SH SYNOPSIS
+.B smd
+.RB [ \-v ]
+.I file
+.SH DESCRIPTION
+.B smd
+renders a markdown file (or, in a pinch, a simple html file) straight to
+the screen using GTK, cairo and pango. No webkit, no javascript engine,
+no network stack. Headings, bold/italic, inline and fenced code, links,
+blockquotes, ordered/unordered lists, horizontal rules, images and LaTeX
+math (inline
+.B $..$
+and block
+.B $$..$$ )
+are all supported.
+
+Math is rasterized through
+.BR pdflatex (1)
+and
+.BR pdftoppm (1)
+if they're installed, and cached under
+.IR ~/.cache/smd .
+If they're missing, smd just shows the raw source instead of failing.
+
+The file is watched with inotify and re-rendered automatically the
+moment it changes on disk \- point your editor at it and treat the
+window as a live preview.
+
+.I file
+is picked as markdown or html purely by its extension
+.RI ( .md / .markdown
+vs
+.IR .html / .htm ).
+The html path is deliberately minimal: no CSS, no layout engine, just
+enough tag recognition to eyeball a document while you're writing it.
+.SH OPTIONS
+.TP
+.B \-v
+print version information and exit.
+.SH KEYS
+.TP
+.B j / k / Up / Down
+scroll a line at a time.
+.TP
+.B space / Page Down
+.TQ
+.B shift+space / Page Up
+scroll a page.
+.TP
+.B g / shift+g
+jump to top / bottom.
+.TP
+.B + / \-
+zoom in / out.
+.TP
+.B 0
+reset zoom.
+.TP
+.B r
+force a reload.
+.TP
+.B q
+quit.
+.PP
+Clicking a link opens it with
+.BR xdg-open (1) .
+.SH FILES
+.TP
+.I ~/.cache/smd/
+rendered LaTeX formulas, cached by content hash so re-rendering the
+same document doesn't keep re-invoking latex.
+.TP
+.I config.h
+compile-time configuration: colors, fonts, margins, keybindings. Copy
+.I config.def.h
+to
+.I config.h
+and edit before building to customize.
+.SH SEE ALSO
+.BR pdflatex (1),
+.BR pdftoppm (1),
+.BR xdg-open (1)
+.SH BUGS
+Nested emphasis (e.g. bold containing italic) isn't supported \- the
+inline parser is intentionally flat. Lists are single-level. The html
+mode has no idea what CSS is. Patches welcome, as always.

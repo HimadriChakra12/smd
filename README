@@ -1,40 +1,79 @@
-surf - simple webkit-based browser
-==================================
-surf is a simple Web browser based on WebKit/GTK+.
+smd - a small markdown (and barely-html) viewer
+=================================================
+(formerly surf, a webkit browser - this is a full repurposing, not
+a fork of the browser code. see below.)
 
-Requirements
-------------
-In order to build surf you need GTK+ and Webkit/GTK+ header files.
+smd renders markdown straight to a window: headings, bold/italic,
+inline & fenced code, links, blockquotes, lists, hr, images, and
+LaTeX math (inline `$..$` and block `$$..$$`, rasterized through
+pdflatex+pdftoppm if you have them installed).
 
-In order to use the functionality of the url-bar, also install dmenu[0].
+There's no webkit, no javascript, no network stack. Rendering is
+GTK + cairo + pango directly, which is a fraction of the dependency
+weight and a fraction of the attack surface. If you just want to
+read/preview a markdown file, you don't need a browser engine for
+that.
 
-Installation
-------------
-Edit config.mk to match your local setup (surf is installed into
-the /usr/local namespace by default).
+It also does a bare-bones job of plain html - just enough tag
+recognition (headings, p, b/i, code/pre, a, ul/li, blockquote, hr,
+img) to eyeball a document while you're writing it. No CSS. If you
+need a real browser, use one.
 
-Afterwards enter the following command to build and install surf (if
-necessary as root):
+Point smd at a file and it watches it with inotify - edit in your
+editor, see the render update in the same window, no manual reload.
 
-    make clean install
 
-Running surf
-------------
-run
-	surf [URI]
+why the rewrite
+----------------
+surf is a fine minimal browser, but webkit is enormous and none of
+that machinery is needed just to read markdown. Ripping it out and
+building a small renderer directly on cairo/pango keeps the "do one
+thing" spirit while actually being small.
 
-See the manpage for further options.
 
-Running surf in tabbed
-----------------------
-For running surf in tabbed[1] there is a script included in the distribution,
-which is run like this:
+requirements
+-------------
+- gtk+3
+- pdflatex + pdftoppm (optional - only needed for math; smd falls
+  back to showing the raw latex source if they're not installed)
+- xdg-open (optional - only needed for clicking links)
 
-	surf-open.sh [URI]
 
-Further invocations of the script will run surf with the specified URI in this
-instance of tabbed.
+installation
+-------------
+Edit config.mk to match your setup, then:
 
-[0] http://tools.suckless.org/dmenu
-[1] http://tools.suckless.org/tabbed
+    cp config.def.h config.h   # (make does this for you too)
+    make
+    sudo make install
 
+Default PREFIX is /usr/local.
+
+
+running
+--------
+
+    smd notes.md
+    smd README.html
+
+
+configuration
+--------------
+smd is configured via config.h (colors, fonts, margins, keybindings),
+copied from config.def.h at build time, dwm/suckless-style. There's
+no config.h left checked in on purpose - edit your own, rebuild.
+
+
+known limitations
+-------------------
+- inline emphasis doesn't nest (bold containing italic etc). The
+  inline parser is a single flat pass on purpose.
+- lists are single-level, no nested indentation.
+- tables aren't supported.
+- the html mode has no CSS and no box model - it's there to "code
+  and see", not to replace a browser.
+- inline images/formulas are sized off one hardcoded line-height
+  guess rather than shaping properly around ascenders/descenders.
+
+None of these are fundamental; they're just where "still minimal"
+won out over "handles everything". Patches welcome.

@@ -1,76 +1,54 @@
-# surf - simple browser
+# smd - simple markdown viewer
 # See LICENSE file for copyright and license details.
 .POSIX:
 
 include config.mk
 
-SRC = surf.c
-WSRC = webext-surf.c
+SRC = smd.c
 OBJ = $(SRC:.c=.o)
-WOBJ = $(WSRC:.c=.o)
-WLIB = $(WSRC:.c=.so)
 
-all: options surf $(WLIB)
+all: options smd
 
 options:
-	@echo surf build options:
-	@echo "CC            = $(CC)"
-	@echo "CFLAGS        = $(SURFCFLAGS) $(CFLAGS)"
-	@echo "WEBEXTCFLAGS  = $(WEBEXTCFLAGS) $(CFLAGS)"
-	@echo "LDFLAGS       = $(LDFLAGS)"
+	@echo smd build options:
+	@echo "CC     = $(CC)"
+	@echo "CFLAGS = $(CFLAGS)"
 
-surf: $(OBJ)
-	$(CC) $(SURFLDFLAGS) $(LDFLAGS) -o $@ $(OBJ) $(LIBS)
+smd: $(OBJ)
+	$(CC) -o $@ $(OBJ) $(LDFLAGS)
 
-$(OBJ) $(WOBJ): config.h common.h config.mk
+$(OBJ): config.h config.mk arg.h
 
 config.h:
 	cp config.def.h $@
 
-$(OBJ): $(SRC)
-	$(CC) $(SURFCFLAGS) $(CFLAGS) -c $(SRC)
-
-$(WLIB): $(WOBJ)
-	$(CC) -shared -Wl,-soname,$@ $(LDFLAGS) -o $@ $? $(WEBEXTLIBS)
-
-$(WOBJ): $(WSRC)
-	$(CC) $(WEBEXTCFLAGS) $(CFLAGS) -c $(WSRC)
+.c.o:
+	$(CC) -c $(CFLAGS) $<
 
 clean:
-	rm -f surf $(OBJ)
-	rm -f $(WLIB) $(WOBJ)
+	rm -f smd $(OBJ)
 
 distclean: clean
-	rm -f config.h surf-$(VERSION).tar.gz
+	rm -f config.h smd-$(VERSION).tar.gz
 
 dist: distclean
-	mkdir -p surf-$(VERSION)
-	cp -R LICENSE Makefile config.mk config.def.h README \
-	    surf-open.sh arg.h TODO.md surf.png \
-	    surf.1 common.h $(SRC) $(WSRC) surf-$(VERSION)
-	tar -cf surf-$(VERSION).tar surf-$(VERSION)
-	gzip surf-$(VERSION).tar
-	rm -rf surf-$(VERSION)
+	mkdir -p smd-$(VERSION)
+	cp -R LICENSE Makefile config.mk config.def.h README TODO.md \
+	    FAQ.md arg.h $(SRC) smd.1 smd-$(VERSION)
+	tar -cf smd-$(VERSION).tar smd-$(VERSION)
+	gzip smd-$(VERSION).tar
+	rm -rf smd-$(VERSION)
 
 install: all
 	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp -f surf $(DESTDIR)$(PREFIX)/bin
-	chmod 755 $(DESTDIR)$(PREFIX)/bin/surf
-	mkdir -p $(DESTDIR)$(LIBDIR)
-	cp -f $(WLIB) $(DESTDIR)$(LIBDIR)
-	for wlib in $(WLIB); do \
-	    chmod 644 $(DESTDIR)$(LIBDIR)/$$wlib; \
-	done
+	cp -f smd $(DESTDIR)$(PREFIX)/bin
+	chmod 755 $(DESTDIR)$(PREFIX)/bin/smd
 	mkdir -p $(DESTDIR)$(MANPREFIX)/man1
-	sed "s/VERSION/$(VERSION)/g" < surf.1 > $(DESTDIR)$(MANPREFIX)/man1/surf.1
-	chmod 644 $(DESTDIR)$(MANPREFIX)/man1/surf.1
+	sed "s/VERSION/$(VERSION)/g" < smd.1 > $(DESTDIR)$(MANPREFIX)/man1/smd.1
+	chmod 644 $(DESTDIR)$(MANPREFIX)/man1/smd.1
 
 uninstall:
-	rm -f $(DESTDIR)$(PREFIX)/bin/surf
-	rm -f $(DESTDIR)$(MANPREFIX)/man1/surf.1
-	for wlib in $(WLIB); do \
-	    rm -f $(DESTDIR)$(LIBDIR)/$$wlib; \
-	done
-	- rmdir $(DESTDIR)$(LIBDIR)
+	rm -f $(DESTDIR)$(PREFIX)/bin/smd
+	rm -f $(DESTDIR)$(MANPREFIX)/man1/smd.1
 
-.PHONY: all options distclean clean dist install uninstall
+.PHONY: all options clean distclean dist install uninstall
